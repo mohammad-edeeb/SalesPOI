@@ -192,14 +192,14 @@ public class CustomerListActivity extends AppCompatActivity {
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mCustomer = mCustomers.get(position);
             holder.mIdView.setText(mCustomers.get(position).getCustomerId());
-            holder.mContentView.setText(mCustomers.get(position).getCustomerName());
+            holder.mContentView.setText(mCustomers.get(position).getName());
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Context context = v.getContext();
                     Intent intent = new Intent(context, CustomerDetailActivity.class);
-                    intent.putExtra(CustomerDetailFragment.ARG_ITEM_ID, holder.mCustomer.getId());
+                    intent.putExtra(CustomerDetailActivity.ARG_ITEM_ID, holder.mCustomer.getId());
                     context.startActivity(intent);
                 }
             });

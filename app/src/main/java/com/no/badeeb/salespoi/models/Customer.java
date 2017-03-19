@@ -7,7 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
+import static android.R.attr.format;
 
 /**
  * Created by meldeeb on 3/18/17.
@@ -15,9 +15,31 @@ import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
 
 public class Customer {
 
+
+    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
+    public enum CustomerStatus{
+        Active(1), Inactive(2), InProgress(3);
+
+        private int status;
+
+        CustomerStatus(int status) {
+            this.status = status;
+        }
+
+        public static CustomerStatus findByStatus(int status){
+            for(CustomerStatus s : values()){
+                if(s.status == status){
+                    return s;
+                }
+            }
+            return null;
+        }
+    }
+
     private Long id;
     private String customerId;
-    private String customerName;
+    private String name;
     private double longitude, latitude;
     private String zoneName;
     private String salesManName;
@@ -31,7 +53,7 @@ public class Customer {
         Customer customer = new Customer();
         customer.id = json.getLong("id");
         customer.customerId = json.getString("customer_id");
-        customer.customerName = json.getString("name");
+        customer.name = json.getString("name");
         customer.longitude = json.getDouble("long");
         customer.latitude = json.getDouble("lat");
         customer.zoneName = json.getString("zone_name");
@@ -47,9 +69,8 @@ public class Customer {
     }
 
     private static Date parseDate(String dateString){
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         try {
-            return format.parse(dateString);
+            return DATE_FORMAT.parse(dateString);
         } catch (ParseException e) {
             e.printStackTrace();
             return null;
@@ -72,12 +93,12 @@ public class Customer {
         this.customerId = customerId;
     }
 
-    public String getCustomerName() {
-        return customerName;
+    public String getName() {
+        return name;
     }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public double getLongitude() {
