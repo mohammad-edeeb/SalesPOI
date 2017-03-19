@@ -1,5 +1,7 @@
 package com.no.badeeb.salespoi.models;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -66,6 +68,10 @@ public class Customer {
         customer.extra2 = json.getString("extra2");
         customer.extra3 = json.getString("extra3");
         return customer;
+    }
+
+    public LatLng getPosition(){
+        return new LatLng(latitude, longitude);
     }
 
     private static Date parseDate(String dateString){

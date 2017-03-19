@@ -125,7 +125,8 @@ public class CustomerListActivity extends AppCompatActivity {
                 Toast.makeText(this, "Refresh", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.logout_action:
-                Toast.makeText(this, "Logout", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(this, MapsActivity.class);
+                startActivity(intent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
