@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Sales POI</string>
+    <string name="title_customer_detail">Customer Detail</string>
+    <string name="refresh_action">Refresh</string>
+    <string name="logout_action">Logout</string>
+</resources>
