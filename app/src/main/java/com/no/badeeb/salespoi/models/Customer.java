@@ -8,8 +8,10 @@ import org.json.JSONObject;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 
 import static android.R.attr.format;
+import static android.R.attr.key;
 
 /**
  * Created by meldeeb on 3/18/17.
@@ -42,32 +44,76 @@ public class Customer {
     private Long id;
     private String customerId;
     private String name;
-    private double longitude, latitude;
+    private Double longitude, latitude;
     private String zoneName;
     private String salesManName;
     private int status;
     private Date lastVisitedAt;
     private Date lastInvoiceAt;
-    private double lastTrxAmount;
+    private Double lastTrxAmount;
     private String extra1, extra2, extra3;
 
     public static Customer fromJSON(JSONObject json) throws JSONException {
+//        Customer customer = new Customer();
+//        customer.id = json.getLong("id");
+//        customer.customerId = json.getString("customer_id");
+//        customer.name = json.getString("name");
+//        customer.longitude = json.getDouble("long");
+//        customer.latitude = json.getDouble("lat");
+//        customer.zoneName = json.getString("zone_name");
+//        customer.salesManName = json.getString("salesman_name");
+//        customer.status = json.getInt("status");
+//        customer.lastVisitedAt = parseDate(json.getString("last_visited_at"));
+//        customer.lastInvoiceAt = parseDate(json.getString("last_invoice_at"));
+//        customer.lastTrxAmount = json.getDouble("last_trx_amount");
+//        customer.extra1 = json.getString("extra1");
+//        customer.extra2 = json.getString("extra2");
+//        customer.extra3 = json.getString("extra3");
+
         Customer customer = new Customer();
         customer.id = json.getLong("id");
-        customer.customerId = json.getString("customer_id");
-        customer.name = json.getString("name");
-        customer.longitude = json.getDouble("long");
-        customer.latitude = json.getDouble("lat");
-        customer.zoneName = json.getString("zone_name");
-        customer.salesManName = json.getString("salesman_name");
+        customer.customerId = getString(json, "customer_id");
+        customer.name = getString(json, "name");
+        customer.longitude = getDouble(json, "long");
+        customer.latitude = getDouble(json, "lat");
+        customer.zoneName = getString(json, "zone_name");
+        customer.salesManName = getString(json, "salesman_name");
         customer.status = json.getInt("status");
-        customer.lastVisitedAt = parseDate(json.getString("last_visited_at"));
-        customer.lastInvoiceAt = parseDate(json.getString("last_invoice_at"));
-        customer.lastTrxAmount = json.getDouble("last_trx_amount");
-        customer.extra1 = json.getString("extra1");
-        customer.extra2 = json.getString("extra2");
-        customer.extra3 = json.getString("extra3");
+        customer.lastVisitedAt = parseDate(getString(json, "last_visited_at"));
+        customer.lastInvoiceAt = parseDate(getString(json, "last_invoice_at"));
+        customer.lastTrxAmount = getDouble(json, "last_trx_amount");
+        customer.extra1 = getString(json, "extra1");
+        customer.extra2 = getString(json, "extra2");
+        customer.extra3 = getString(json, "extra3");
         return customer;
+    }
+
+    private static String getString(JSONObject json, String key) throws JSONException {
+        if(json.isNull(key)){
+            return "";
+        }
+        return json.getString(key);
+    }
+
+    private static Double getDouble(JSONObject json, String key) throws JSONException {
+        if(json.isNull(key)){
+            return null;
+        }
+        return json.getDouble(key);
+    }
+
+    public String getLastVisitedAtString(){
+        if(lastVisitedAt == null){
+            return "";
+        }
+        return DATE_FORMAT.format(lastVisitedAt);
+    }
+
+    public String getLastInvoiceAtString(){
+        if(lastInvoiceAt == null){
+            return "";
+        }
+        return DATE_FORMAT.format(lastInvoiceAt);
     }
 
     public LatLng getPosition(){
@@ -107,19 +153,19 @@ public class Customer {
         this.name = name;
     }
 
-    public double getLongitude() {
+    public Double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
+    public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
 
-    public double getLatitude() {
+    public Double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public void setLatitude(Double latitude) {
         this.latitude = latitude;
     }
 
@@ -163,11 +209,11 @@ public class Customer {
         this.lastInvoiceAt = lastInvoiceAt;
     }
 
-    public double getLastTrxAmount() {
+    public Double getLastTrxAmount() {
         return lastTrxAmount;
     }
 
-    public void setLastTrxAmount(double lastTrxAmount) {
+    public void setLastTrxAmount(Double lastTrxAmount) {
         this.lastTrxAmount = lastTrxAmount;
     }
 

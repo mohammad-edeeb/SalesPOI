@@ -8,6 +8,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -53,9 +54,11 @@ public class CustomerListActivity extends AppCompatActivity {
     private static final int LOCATION_PERM_RQST_CODE = 1;
 
 
-    RecyclerView recyclerView;
-    CustomersRecyclerViewAdapter recyclerViewAdapter;
-    LocationManager locationManager;
+    private RecyclerView recyclerView;
+    private FloatingActionButton fab;
+
+    private CustomersRecyclerViewAdapter recyclerViewAdapter;
+    private LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +69,7 @@ public class CustomerListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
+        fab = (FloatingActionButton) findViewById(R.id.fab);
 
         recyclerView = (RecyclerView)findViewById(R.id.customer_list);
         recyclerViewAdapter = new CustomersRecyclerViewAdapter();
@@ -101,7 +105,7 @@ public class CustomerListActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                         }
-                        recyclerViewAdapter.setCustomers(CustomersManager.getData());
+//                        recyclerViewAdapter.setCustomers(CustomersManager.getData());
                         recyclerViewAdapter.notifyDataSetChanged();
                         System.out.println("Response: " + response);
                     }
@@ -122,15 +126,18 @@ public class CustomerListActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.refresh_action:
                 getCustomers();
-                Toast.makeText(this, "Refresh", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.logout_action:
-                Intent intent = new Intent(this, MapsActivity.class);
-                startActivity(intent);
+                Toast.makeText(this, "Logout", Toast.LENGTH_SHORT).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void openMap(View view){
+        Intent intent = new Intent(this, MapsActivity.class);
+        startActivity(intent);
     }
 
     private void findCurrentLocation() {
@@ -175,7 +182,7 @@ public class CustomerListActivity extends AppCompatActivity {
         private List<Customer> mCustomers;
 
         public CustomersRecyclerViewAdapter() {
-            mCustomers = new ArrayList<>();
+            mCustomers = CustomersManager.getData();
         }
 
         public void setCustomers(List<Customer> customers){

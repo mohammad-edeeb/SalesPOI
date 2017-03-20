@@ -50,8 +50,8 @@ public class CustomerDetailActivity extends AppCompatActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        customerIdTextview = (TextView)findViewById(R.id.customer_id_text_view);
-        customerNameTextview = (TextView)findViewById(R.id.customer_name_text_view);
+        customerIdTextview = (TextView) findViewById(R.id.customer_id_text_view);
+        customerNameTextview = (TextView) findViewById(R.id.customer_name_text_view);
         customerZoneTextview = (TextView) findViewById(R.id.customer_zone_text_view);
         customerStatusTextview = (TextView) findViewById(R.id.customer_status_text_view);
         customerLastVisitTextview = (TextView) findViewById(R.id.customer_last_visit_text_view);
@@ -73,8 +73,8 @@ public class CustomerDetailActivity extends AppCompatActivity {
         customerIdTextview.setText(customer.getCustomerId());
         customerZoneTextview.setText(customer.getZoneName());
         customerStatusTextview.setText(Customer.CustomerStatus.findByStatus(customer.getStatus()).toString());
-        customerLastVisitTextview.setText(Customer.DATE_FORMAT.format(customer.getLastVisitedAt()));
-        customerLastInvoiceTextview.setText(Customer.DATE_FORMAT.format(customer.getLastInvoiceAt()));
+        customerLastVisitTextview.setText(customer.getLastVisitedAtString());
+        customerLastInvoiceTextview.setText(customer.getLastInvoiceAtString());
         customerLastTrxTextview.setText(customer.getLastTrxAmount() + "");
         customerExtra1Textview.setText(customer.getExtra1());
         customerExtra2Textview.setText(customer.getExtra2());
