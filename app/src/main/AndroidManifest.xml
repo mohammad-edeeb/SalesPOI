@@ -12,16 +12,23 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
-            android:name=".CustomerListActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:name=".LoginActivity"
+            android:label="@string/title_activity_login">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".CustomerListActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+
         <activity
             android:name=".CustomerDetailActivity"
             android:label="@string/title_customer_detail"
@@ -51,6 +58,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.no.badeeb.salespoi.CustomerListActivity" />
         </activity>
+
     </application>
 
 </manifest>

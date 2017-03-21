@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -37,7 +38,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static android.media.CamcorderProfile.get;
 
@@ -59,6 +62,7 @@ public class CustomerListActivity extends AppCompatActivity {
 
     private CustomersRecyclerViewAdapter recyclerViewAdapter;
     private LocationManager locationManager;
+    private RequestQueue requestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,16 +75,19 @@ public class CustomerListActivity extends AppCompatActivity {
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
 
-        recyclerView = (RecyclerView)findViewById(R.id.customer_list);
+        recyclerView = (RecyclerView) findViewById(R.id.customer_list);
         recyclerViewAdapter = new CustomersRecyclerViewAdapter();
         recyclerView.setAdapter(recyclerViewAdapter);
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
     }
 
+    private RequestQueue getRequestQueue() {
+        return requestQueue == null ? Volley.newRequestQueue(this) : requestQueue;
+    }
+
     private void getCustomers() {
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "http://10.0.2.2:3000/customers/near_customers.json?long=123&lat=4523";
+        String url = Constants.HOST + "/customers/near_customers.json?long=123&lat=4523";
 
         JSONArray array = new JSONArray();
         JSONObject jsonObject = new JSONObject();
@@ -105,7 +112,6 @@ public class CustomerListActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                         }
-//                        recyclerViewAdapter.setCustomers(CustomersManager.getData());
                         recyclerViewAdapter.notifyDataSetChanged();
                         System.out.println("Response: " + response);
                     }
@@ -117,8 +123,7 @@ public class CustomerListActivity extends AppCompatActivity {
                         System.out.println("Error: " + error);
                     }
                 });
-
-        queue.add(jsonRequest);
+        getRequestQueue().add(jsonRequest);
     }
 
     @Override
@@ -128,6 +133,7 @@ public class CustomerListActivity extends AppCompatActivity {
                 getCustomers();
                 return true;
             case R.id.logout_action:
+                startActivity(new Intent(this, LoginActivity.class));
                 Toast.makeText(this, "Logout", Toast.LENGTH_SHORT).show();
                 return true;
             default:
@@ -135,7 +141,7 @@ public class CustomerListActivity extends AppCompatActivity {
         }
     }
 
-    public void openMap(View view){
+    public void openMap(View view) {
         Intent intent = new Intent(this, MapsActivity.class);
         startActivity(intent);
     }
@@ -185,7 +191,7 @@ public class CustomerListActivity extends AppCompatActivity {
             mCustomers = CustomersManager.getData();
         }
 
-        public void setCustomers(List<Customer> customers){
+        public void setCustomers(List<Customer> customers) {
             this.mCustomers = customers;
         }
 

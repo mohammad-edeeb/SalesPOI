@@ -1,5 +1,7 @@
 package com.no.badeeb.salespoi.models;
 
+import android.text.TextUtils;
+
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONException;
@@ -121,6 +123,9 @@ public class Customer {
     }
 
     private static Date parseDate(String dateString){
+        if(TextUtils.isEmpty(dateString)){
+            return null;
+        }
         try {
             return DATE_FORMAT.parse(dateString);
         } catch (ParseException e) {
