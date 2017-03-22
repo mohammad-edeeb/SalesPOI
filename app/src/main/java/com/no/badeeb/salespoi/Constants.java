@@ -5,5 +5,6 @@ package com.no.badeeb.salespoi;
  */
 
 public class Constants {
-    public static final String HOST = "http://10.0.2.2:3000";
+//    public static final String HOST = "http://10.0.2.2:3000";
+    public static final String HOST = "http://192.168.1.2:3000";
 }

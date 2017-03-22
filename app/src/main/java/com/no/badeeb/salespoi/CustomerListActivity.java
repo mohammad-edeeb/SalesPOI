@@ -1,13 +1,17 @@
 package com.no.badeeb.salespoi;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +23,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +34,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
@@ -40,22 +45,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static android.media.CamcorderProfile.get;
 
-/**
- * An activity representing a list of Customers. This activity
- * has different presentations for handset and tablet-size devices. On
- * handsets, the activity presents a list of items, which when touched,
- * lead to a {@link CustomerDetailActivity} representing
- * item details. On tablets, the activity presents the list of items and
- * item details side-by-side using two vertical panes.
- */
 public class CustomerListActivity extends AppCompatActivity {
 
     private static final int LOCATION_PERM_RQST_CODE = 1;
@@ -63,12 +61,16 @@ public class CustomerListActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private FloatingActionButton fab;
+    private ProgressBar progressBar;
+    private FrameLayout frameLayout;
 
     private CustomersRecyclerViewAdapter recyclerViewAdapter;
     private LocationManager locationManager;
     private RequestQueue requestQueue;
 
     private Gson gson;
+    private TimerTask gpsTask;
+    private Location userLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +82,8 @@ public class CustomerListActivity extends AppCompatActivity {
         toolbar.setTitle(getTitle());
 
         fab = (FloatingActionButton) findViewById(R.id.fab);
+        progressBar = (ProgressBar) findViewById(R.id.gps_progress);
+        frameLayout = (FrameLayout) findViewById(R.id.frameLayout);
 
         recyclerView = (RecyclerView) findViewById(R.id.customer_list);
         recyclerViewAdapter = new CustomersRecyclerViewAdapter();
@@ -89,21 +93,32 @@ public class CustomerListActivity extends AppCompatActivity {
         gsonBuilder.setDateFormat("yyyy-MM-dd");
         gson = gsonBuilder.create();
 
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
     }
 
     private RequestQueue getRequestQueue() {
         return requestQueue == null ? Volley.newRequestQueue(this) : requestQueue;
     }
 
-    private void getCustomers() {
-        String url = Constants.HOST + "/customers/near_customers.json?long=123&lat=4523";
+    private void findLocationAndTriggerRequest() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERM_RQST_CODE);
+        } else {
+            getLocation();
+        }
+    }
 
+    private void getCustomers() {
+        if (userLocation == null) {
+            Toast.makeText(this, "No GPS signal detected", Toast.LENGTH_LONG).show();
+            return;
+        }
+        String url = Constants.HOST + "/customers/near_customers.json";
         JSONArray array = new JSONArray();
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("long", "long");
-            jsonObject.put("lat", "lat");
+            jsonObject.put("lat", userLocation.getLatitude());
+            jsonObject.put("long", userLocation.getLongitude());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -125,7 +140,7 @@ public class CustomerListActivity extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         System.out.println("Error: " + error);
                     }
-                }){
+                }) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 String authToken = CustomerListActivity.this.getSharedPreferences("User", MODE_PRIVATE).getString("auth_token", "no_token");
@@ -137,33 +152,116 @@ public class CustomerListActivity extends AppCompatActivity {
         getRequestQueue().add(jsonRequest);
     }
 
+    private void showLocationToast(Location location) {
+        Toast.makeText(this, "Lat: " + location.getLatitude() + "\nLong: " + location.getLongitude(), Toast.LENGTH_LONG).show();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.refresh_action:
-                getCustomers();
+                findLocationAndTriggerRequest();
                 return true;
             case R.id.logout_action:
-                startActivity(new Intent(this, LoginActivity.class));
-                Toast.makeText(this, "Logout", Toast.LENGTH_SHORT).show();
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    public void showSettingsDialog() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+
+        alertDialog.setTitle("GPS Disabled");
+        alertDialog.setMessage("Do you want to turn GPS on?");
+
+        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            }
+        });
+
+        alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                Toast.makeText(CustomerListActivity.this, "Please enable GPS then try again", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        alertDialog.show();
+    }
+
+    private void getLocation() {
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            showSettingsDialog();
+            return;
+        }
+        try {
+            showProgress(true);
+            userLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            Timer t = new Timer();
+            t.schedule(gpsTask = new TimerTask() {
+                @Override
+                public void run() {
+                    CustomerListActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showProgress(false);
+                            getCustomers();
+                        }
+                    });
+                }
+            }, 2000);
+            locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, new LocationListener() {
+                        @Override
+                        public void onLocationChanged(Location location) {
+                            CustomerListActivity.this.gpsTask.cancel();
+                            showProgress(false);
+                            CustomerListActivity.this.showLocationToast(location);
+                            if (location != null) {
+                                CustomerListActivity.this.userLocation = location;
+                            }
+                        }
+
+                        @Override
+                        public void onStatusChanged(String provider, int status, Bundle extras) {
+                        }
+
+                        @Override
+                        public void onProviderEnabled(String provider) {
+                        }
+
+                        @Override
+                        public void onProviderDisabled(String provider) {
+                        }
+                    }
+                    , null);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showProgress(final boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        frameLayout.setVisibility(show ? View.GONE : View.VISIBLE);
+        fab.setVisibility(show ? View.GONE : View.VISIBLE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERM_RQST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getLocation();
+            }
+        }
+    }
+
     public void openMap(View view) {
         Intent intent = new Intent(this, MapsActivity.class);
         startActivity(intent);
-    }
-
-    private void findCurrentLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERM_RQST_CODE);
-        } else {
-            LocationListener locationListener = new MyLocationListener();
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
-        }
     }
 
     @Override
