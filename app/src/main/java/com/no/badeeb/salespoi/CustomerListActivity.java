@@ -29,7 +29,10 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.no.badeeb.salespoi.models.Customer;
 import com.no.badeeb.salespoi.models.CustomersManager;
 
@@ -38,6 +41,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +68,8 @@ public class CustomerListActivity extends AppCompatActivity {
     private LocationManager locationManager;
     private RequestQueue requestQueue;
 
+    private Gson gson;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +84,10 @@ public class CustomerListActivity extends AppCompatActivity {
         recyclerView = (RecyclerView) findViewById(R.id.customer_list);
         recyclerViewAdapter = new CustomersRecyclerViewAdapter();
         recyclerView.setAdapter(recyclerViewAdapter);
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.setDateFormat("yyyy-MM-dd");
+        gson = gsonBuilder.create();
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
     }
@@ -99,19 +109,12 @@ public class CustomerListActivity extends AppCompatActivity {
         }
         array.put(jsonObject);
 
-        JsonArrayRequest jsonRequest = new JsonArrayRequest(Request.Method.GET, url, array,
-                new Response.Listener<JSONArray>() {
+        StringRequest jsonRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
                     @Override
-                    public void onResponse(JSONArray response) {
-                        CustomersManager.clear();
-                        for (int i = 0; i < response.length(); i++) {
-                            try {
-                                JSONObject customerJSON = response.getJSONObject(i);
-                                CustomersManager.add(Customer.fromJSON(customerJSON));
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                    public void onResponse(String response) {
+                        List<Customer> customers = Arrays.asList(gson.fromJson(response, Customer[].class));
+                        CustomersManager.add(customers);
                         recyclerViewAdapter.notifyDataSetChanged();
                         System.out.println("Response: " + response);
                     }
@@ -122,7 +125,15 @@ public class CustomerListActivity extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         System.out.println("Error: " + error);
                     }
-                });
+                }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                String authToken = CustomerListActivity.this.getSharedPreferences("User", MODE_PRIVATE).getString("auth_token", "no_token");
+                Map<String, String> newHeaders = new HashMap<>();
+                newHeaders.put("Authorization", authToken);
+                return newHeaders;
+            }
+        };
         getRequestQueue().add(jsonRequest);
     }
 
@@ -189,10 +200,6 @@ public class CustomerListActivity extends AppCompatActivity {
 
         public CustomersRecyclerViewAdapter() {
             mCustomers = CustomersManager.getData();
-        }
-
-        public void setCustomers(List<Customer> customers) {
-            this.mCustomers = customers;
         }
 
         @Override

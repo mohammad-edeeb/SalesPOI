@@ -76,7 +76,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         builder.append("\n");
         builder.append("Last invoice: " + customer.getLastInvoiceAtString());
         builder.append("\n");
-        builder.append("Last trx amount: " + customer.getLastTrxAmount());
+        builder.append("Last trx amount: " + customer.getLastTrxAmountString());
         return builder.toString();
     }
 

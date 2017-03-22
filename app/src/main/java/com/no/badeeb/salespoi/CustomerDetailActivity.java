@@ -75,7 +75,7 @@ public class CustomerDetailActivity extends AppCompatActivity {
         customerStatusTextview.setText(Customer.CustomerStatus.findByStatus(customer.getStatus()).toString());
         customerLastVisitTextview.setText(customer.getLastVisitedAtString());
         customerLastInvoiceTextview.setText(customer.getLastInvoiceAtString());
-        customerLastTrxTextview.setText(customer.getLastTrxAmount() + "");
+        customerLastTrxTextview.setText(customer.getLastTrxAmountString());
         customerExtra1Textview.setText(customer.getExtra1());
         customerExtra2Textview.setText(customer.getExtra2());
         customerExtra3Textview.setText(customer.getExtra3());

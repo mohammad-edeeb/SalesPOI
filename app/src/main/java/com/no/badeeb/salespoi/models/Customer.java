@@ -3,6 +3,7 @@ package com.no.badeeb.salespoi.models;
 import android.text.TextUtils;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.annotations.SerializedName;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,65 +45,32 @@ public class Customer {
     }
 
     private Long id;
+    @SerializedName("customer_id")
     private String customerId;
+    @SerializedName("name")
     private String name;
-    private Double longitude, latitude;
+    @SerializedName("long")
+    private Double longitude;
+    @SerializedName("lat")
+    private Double latitude;
+    @SerializedName("zone_name")
     private String zoneName;
+    @SerializedName("salesman_name")
     private String salesManName;
+    @SerializedName("status")
     private int status;
+    @SerializedName("last_visited_at")
     private Date lastVisitedAt;
+    @SerializedName("last_invoice_at")
     private Date lastInvoiceAt;
+    @SerializedName("last_trx_amount")
     private Double lastTrxAmount;
-    private String extra1, extra2, extra3;
-
-    public static Customer fromJSON(JSONObject json) throws JSONException {
-//        Customer customer = new Customer();
-//        customer.id = json.getLong("id");
-//        customer.customerId = json.getString("customer_id");
-//        customer.name = json.getString("name");
-//        customer.longitude = json.getDouble("long");
-//        customer.latitude = json.getDouble("lat");
-//        customer.zoneName = json.getString("zone_name");
-//        customer.salesManName = json.getString("salesman_name");
-//        customer.status = json.getInt("status");
-//        customer.lastVisitedAt = parseDate(json.getString("last_visited_at"));
-//        customer.lastInvoiceAt = parseDate(json.getString("last_invoice_at"));
-//        customer.lastTrxAmount = json.getDouble("last_trx_amount");
-//        customer.extra1 = json.getString("extra1");
-//        customer.extra2 = json.getString("extra2");
-//        customer.extra3 = json.getString("extra3");
-
-        Customer customer = new Customer();
-        customer.id = json.getLong("id");
-        customer.customerId = getString(json, "customer_id");
-        customer.name = getString(json, "name");
-        customer.longitude = getDouble(json, "long");
-        customer.latitude = getDouble(json, "lat");
-        customer.zoneName = getString(json, "zone_name");
-        customer.salesManName = getString(json, "salesman_name");
-        customer.status = json.getInt("status");
-        customer.lastVisitedAt = parseDate(getString(json, "last_visited_at"));
-        customer.lastInvoiceAt = parseDate(getString(json, "last_invoice_at"));
-        customer.lastTrxAmount = getDouble(json, "last_trx_amount");
-        customer.extra1 = getString(json, "extra1");
-        customer.extra2 = getString(json, "extra2");
-        customer.extra3 = getString(json, "extra3");
-        return customer;
-    }
-
-    private static String getString(JSONObject json, String key) throws JSONException {
-        if(json.isNull(key)){
-            return "";
-        }
-        return json.getString(key);
-    }
-
-    private static Double getDouble(JSONObject json, String key) throws JSONException {
-        if(json.isNull(key)){
-            return null;
-        }
-        return json.getDouble(key);
-    }
+    @SerializedName("extra1")
+    private String extra1;
+    @SerializedName("extra2")
+    private String extra2;
+    @SerializedName("extra3")
+    private String extra3;
 
     public String getLastVisitedAtString(){
         if(lastVisitedAt == null){
@@ -118,20 +86,15 @@ public class Customer {
         return DATE_FORMAT.format(lastInvoiceAt);
     }
 
-    public LatLng getPosition(){
-        return new LatLng(latitude, longitude);
+    public String getLastTrxAmountString(){
+        if(lastTrxAmount == null){
+            return "";
+        }
+        return lastTrxAmount.toString();
     }
 
-    private static Date parseDate(String dateString){
-        if(TextUtils.isEmpty(dateString)){
-            return null;
-        }
-        try {
-            return DATE_FORMAT.parse(dateString);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public LatLng getPosition(){
+        return new LatLng(latitude, longitude);
     }
 
     public Long getId() {
