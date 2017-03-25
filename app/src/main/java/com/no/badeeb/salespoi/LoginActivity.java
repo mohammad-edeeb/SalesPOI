@@ -100,22 +100,16 @@ public class LoginActivity extends AppCompatActivity {
                         boolean success = false;
                         String authToken = null;
                         try {
-                            success = response.getString("status").equals("ok");
                             authToken = response.getString("auth_token");
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                         showProgress(false);
-                        if (success) {
-                            SharedPreferences preferences = LoginActivity.this.getSharedPreferences("User", MODE_PRIVATE);
-                            preferences.edit().putString("auth_token", authToken).commit();
-                            startActivity(new Intent(LoginActivity.this, CustomerListActivity.class));
-                            finish();
-                        } else {
-                            passwordEditText.setError(getString(R.string.error_incorrect_password));
-                            passwordEditText.requestFocus();
-                        }
-                        System.out.println("success: " + response);
+                        SharedPreferences preferences = LoginActivity.this.getSharedPreferences("User", MODE_PRIVATE);
+                        preferences.edit().putString("auth_token", authToken).commit();
+                        startActivity(new Intent(LoginActivity.this, CustomerListActivity.class));
+                        finish();
+
                     }
                 },
                 new Response.ErrorListener() {
@@ -123,7 +117,8 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         showProgress(false);
-                        System.out.println("error: " + error);
+                        passwordEditText.setError(getString(R.string.error_incorrect_password));
+                        passwordEditText.requestFocus();
                     }
                 });
 

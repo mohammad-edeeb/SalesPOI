@@ -11,7 +11,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.no.badeeb.salespoi.models.Customer;
-import com.no.badeeb.salespoi.models.CustomersManager;
+import com.no.badeeb.salespoi.models.DataCenter;
 
 /**
  * An activity representing a single Customer detail screen. This
@@ -62,7 +62,7 @@ public class CustomerDetailActivity extends AppCompatActivity {
         customerExtra3Textview = (TextView) findViewById(R.id.customer_extra3_text_view);
 
         Long customerId = getIntent().getLongExtra(ARG_ITEM_ID, -1);
-        customer = CustomersManager.getById(customerId);
+        customer = DataCenter.getById(customerId);
 
         CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
         if (appBarLayout != null) {

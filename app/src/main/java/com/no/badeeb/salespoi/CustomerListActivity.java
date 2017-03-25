@@ -17,6 +17,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,15 +35,14 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.no.badeeb.salespoi.models.Customer;
-import com.no.badeeb.salespoi.models.CustomersManager;
+import com.no.badeeb.salespoi.models.DataCenter;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Arrays;
@@ -57,6 +57,7 @@ import static android.media.CamcorderProfile.get;
 public class CustomerListActivity extends AppCompatActivity {
 
     private static final int LOCATION_PERM_RQST_CODE = 1;
+    private static final int GPS_SIGNAL_TIMEOUT = 1 * 1000; // 10 seconds
 
 
     private RecyclerView recyclerView;
@@ -110,50 +111,40 @@ public class CustomerListActivity extends AppCompatActivity {
 
     private void getCustomers() {
         if (userLocation == null) {
+            showProgress(false);
             Toast.makeText(this, "No GPS signal detected", Toast.LENGTH_LONG).show();
             return;
         }
-        String url = Constants.HOST + "/customers/near_customers.json";
-        JSONArray array = new JSONArray();
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("lat", userLocation.getLatitude());
-            jsonObject.put("long", userLocation.getLongitude());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        array.put(jsonObject);
-
+        String url = Constants.HOST + "/api/sales_men/near_customers.json?";
+        url += "lat=" + userLocation.getLatitude() + "&long=" + userLocation.getLongitude();
         StringRequest jsonRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         List<Customer> customers = Arrays.asList(gson.fromJson(response, Customer[].class));
-                        CustomersManager.add(customers);
+                        DataCenter.add(customers);
+                        showProgress(false);
                         recyclerViewAdapter.notifyDataSetChanged();
-                        System.out.println("Response: " + response);
                     }
                 },
                 new Response.ErrorListener() {
-
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        System.out.println("Error: " + error);
+                        showProgress(false);
+                        if(error.networkResponse.statusCode == 401){
+                            CustomerListActivity.this.switchToLogin();
+                        }
                     }
                 }) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
-                String authToken = CustomerListActivity.this.getSharedPreferences("User", MODE_PRIVATE).getString("auth_token", "no_token");
+                String authToken = Utils.getAuthToken(CustomerListActivity.this);
                 Map<String, String> newHeaders = new HashMap<>();
                 newHeaders.put("Authorization", authToken);
                 return newHeaders;
             }
         };
         getRequestQueue().add(jsonRequest);
-    }
-
-    private void showLocationToast(Location location) {
-        Toast.makeText(this, "Lat: " + location.getLatitude() + "\nLong: " + location.getLongitude(), Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -163,14 +154,53 @@ public class CustomerListActivity extends AppCompatActivity {
                 findLocationAndTriggerRequest();
                 return true;
             case R.id.logout_action:
-
+                logout();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    public void showSettingsDialog() {
+    private void logout() {
+        String authToken = Utils.getAuthToken(this);
+        if (TextUtils.isEmpty(authToken)) {
+            switchToLogin();
+        }
+        String url = Constants.HOST + "/api/sales_men/sign_out.json";
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.DELETE, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        CustomerListActivity.this.switchToLogin();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        if(error.networkResponse.statusCode == 401){
+                            CustomerListActivity.this.switchToLogin();
+                        }
+                    }
+                }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                String authToken = Utils.getAuthToken(CustomerListActivity.this);
+                Map<String, String> newHeaders = new HashMap<>();
+                newHeaders.put("Authorization", authToken);
+                return newHeaders;
+            }
+        };
+
+        getRequestQueue().add(request);
+    }
+
+    private void switchToLogin() {
+        Utils.removeAuthToken(this);
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
+    }
+
+    private void showSettingsDialog() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
 
         alertDialog.setTitle("GPS Disabled");
@@ -208,21 +238,19 @@ public class CustomerListActivity extends AppCompatActivity {
                     CustomerListActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showProgress(false);
                             getCustomers();
                         }
                     });
                 }
-            }, 2000);
+            }, GPS_SIGNAL_TIMEOUT);
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, new LocationListener() {
                         @Override
                         public void onLocationChanged(Location location) {
                             CustomerListActivity.this.gpsTask.cancel();
-                            showProgress(false);
-                            CustomerListActivity.this.showLocationToast(location);
                             if (location != null) {
                                 CustomerListActivity.this.userLocation = location;
                             }
+                            getCustomers();
                         }
 
                         @Override
@@ -297,7 +325,7 @@ public class CustomerListActivity extends AppCompatActivity {
         private List<Customer> mCustomers;
 
         public CustomersRecyclerViewAdapter() {
-            mCustomers = CustomersManager.getData();
+            mCustomers = DataCenter.getData();
         }
 
         @Override

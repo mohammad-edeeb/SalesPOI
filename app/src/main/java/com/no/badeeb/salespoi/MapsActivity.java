@@ -14,7 +14,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.no.badeeb.salespoi.models.Customer;
-import com.no.badeeb.salespoi.models.CustomersManager;
+import com.no.badeeb.salespoi.models.DataCenter;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -32,12 +32,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        LatLngBounds.Builder boundsBuilder = LatLngBounds.builder();
-        for (Customer c: CustomersManager.getData()) {
-            boundsBuilder.include(c.getPosition());
+        LatLngBounds bounds = null;
+        for (Customer c: DataCenter.getData()) {
+            if(bounds == null){
+                bounds = new LatLngBounds(c.getPosition(), c.getPosition());
+            }
+            else{
+                bounds.including(c.getPosition());
+            }
             addCustomerMarker(c);
         }
-        LatLngBounds bounds = boundsBuilder.build();
         map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
     }
 
