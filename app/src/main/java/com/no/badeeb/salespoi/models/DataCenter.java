@@ -1,36 +1,49 @@
 package com.no.badeeb.salespoi.models;
 
+import android.location.Location;
+
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataCenter {
-    private static List<Customer> data = new ArrayList<>();
-    private static LatLng userLocation = null;
+    private static DataCenter instance;
 
-    public static LatLng getUserLocation(){
+    private List<Customer> customers = new ArrayList<>();
+    private Location userLocation = null;
+
+    private DataCenter(){}
+
+    public static DataCenter getInstance(){
+        if(instance == null){
+            return instance = new DataCenter();
+        }
+        return instance;
+    }
+
+    public boolean hasCustomers(){
+        return !customers.isEmpty();
+    }
+
+    public Location getUserLocation(){
         return userLocation;
     }
 
-    public static void setUserLocation(LatLng location){
+    public void setUserLocation(Location location){
         userLocation = location;
     }
 
-    public static void add(Customer customer){
-        data.add(customer);
+    public void add(List<Customer> customers){
+        this.customers.addAll(customers);
     }
 
-    public static void add(List<Customer> customers){
-        data.addAll(customers);
+    public void clearCustomers(){
+        customers.clear();
     }
 
-    public static void clear(){
-        data.clear();
-    }
-
-    public static Customer getById(Long id){
-        for (Customer customer: data) {
+    public Customer getCustomerById(Long id){
+        for (Customer customer: customers) {
             if(customer.getId().equals(id)){
                 return customer;
             }
@@ -38,8 +51,8 @@ public class DataCenter {
         return null;
     }
 
-    public static List<Customer> getData(){
-        return data;
+    public List<Customer> getCustomers(){
+        return customers;
     }
 
 }

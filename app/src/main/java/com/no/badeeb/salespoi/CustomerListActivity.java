@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -38,6 +39,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.no.badeeb.salespoi.models.Customer;
@@ -87,6 +89,10 @@ public class CustomerListActivity extends AppCompatActivity {
         frameLayout = (FrameLayout) findViewById(R.id.frameLayout);
 
         recyclerView = (RecyclerView) findViewById(R.id.customer_list);
+
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                DividerItemDecoration.VERTICAL);
+        recyclerView.addItemDecoration(dividerItemDecoration);
         recyclerViewAdapter = new CustomersRecyclerViewAdapter();
         recyclerView.setAdapter(recyclerViewAdapter);
 
@@ -115,6 +121,7 @@ public class CustomerListActivity extends AppCompatActivity {
             Toast.makeText(this, "No GPS signal detected", Toast.LENGTH_LONG).show();
             return;
         }
+        DataCenter.getInstance().setUserLocation(userLocation);
         String url = Constants.HOST + "/api/sales_men/near_customers.json?";
         url += "lat=" + userLocation.getLatitude() + "&long=" + userLocation.getLongitude();
         StringRequest jsonRequest = new StringRequest(Request.Method.GET, url,
@@ -122,8 +129,12 @@ public class CustomerListActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String response) {
                         List<Customer> customers = Arrays.asList(gson.fromJson(response, Customer[].class));
-                        DataCenter.add(customers);
+                        DataCenter.getInstance().clearCustomers();
+                        DataCenter.getInstance().add(customers);
                         showProgress(false);
+                        if(customers == null || customers.isEmpty()){
+                            Toast.makeText(CustomerListActivity.this, "No near customers found", Toast.LENGTH_LONG).show();
+                        }
                         recyclerViewAdapter.notifyDataSetChanged();
                     }
                 },
@@ -246,6 +257,11 @@ public class CustomerListActivity extends AppCompatActivity {
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, new LocationListener() {
                         @Override
                         public void onLocationChanged(Location location) {
+                            try{
+                                locationManager.removeUpdates(this);
+                            }catch (SecurityException e){
+                                e.printStackTrace();
+                            }
                             CustomerListActivity.this.gpsTask.cancel();
                             if (location != null) {
                                 CustomerListActivity.this.userLocation = location;
@@ -288,6 +304,10 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
     public void openMap(View view) {
+        if(!DataCenter.getInstance().hasCustomers()){
+            Toast.makeText(this, "No customers to show, please refresh", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent intent = new Intent(this, MapsActivity.class);
         startActivity(intent);
     }
@@ -299,33 +319,13 @@ public class CustomerListActivity extends AppCompatActivity {
         return true;
     }
 
-    private class MyLocationListener implements LocationListener {
-
-        @Override
-        public void onLocationChanged(Location loc) {
-            Toast.makeText(CustomerListActivity.this, "Long: " + loc.getLongitude() + "/n Lat: " + loc.getLatitude(), Toast.LENGTH_LONG).show();
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-        }
-    }
-
     public class CustomersRecyclerViewAdapter
             extends RecyclerView.Adapter<CustomersRecyclerViewAdapter.ViewHolder> {
 
         private List<Customer> mCustomers;
 
         public CustomersRecyclerViewAdapter() {
-            mCustomers = DataCenter.getData();
+            mCustomers = DataCenter.getInstance().getCustomers();
         }
 
         @Override
@@ -337,10 +337,24 @@ public class CustomerListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mCustomer = mCustomers.get(position);
-            holder.mIdView.setText(mCustomers.get(position).getCustomerId());
-            holder.mContentView.setText(mCustomers.get(position).getName());
+            Customer c = mCustomers.get(position);
+            holder.mCustomer = c;
+            holder.mIdView.setText(c.getCustomerId());
+            holder.mContentView.setText(c.getName());
 
+            Customer.CustomerStatus statusEnum = Customer.CustomerStatus.findByStatus(c.getStatus());
+            holder.mView.setAlpha(0.7f);
+            switch (statusEnum){
+                case Active:
+                    holder.mView.setBackgroundColor(CustomerListActivity.this.getResources().getColor(R.color.activeCustomer));
+                    break;
+                case InProgress:
+                    holder.mView.setBackgroundColor(CustomerListActivity.this.getResources().getColor(R.color.inprogressCustomer));
+                    break;
+                case Inactive:
+                    holder.mView.setBackgroundColor(CustomerListActivity.this.getResources().getColor(R.color.inactiveCustomer));
+                    break;
+            }
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

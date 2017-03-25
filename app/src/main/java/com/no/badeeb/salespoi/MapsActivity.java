@@ -9,6 +9,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -29,20 +30,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+//    @Override
+//    public void onMapReady(GoogleMap googleMap) {
+//        map = googleMap;
+//        DataCenter dataCenter = DataCenter.getInstance();
+//        LatLng userPosition = new LatLng(dataCenter.getUserLocation().getLatitude(), dataCenter.getUserLocation().getLongitude());
+//        LatLngBounds bounds = new LatLngBounds(userPosition, userPosition);
+//        addUserPositionMarker(userPosition);
+//        for (Customer c: dataCenter.getCustomers()) {
+//            bounds.including(c.getPosition());
+//            addCustomerMarker(c);
+//        }
+//        map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
+//    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        LatLngBounds bounds = null;
-        for (Customer c: DataCenter.getData()) {
-            if(bounds == null){
-                bounds = new LatLngBounds(c.getPosition(), c.getPosition());
-            }
-            else{
-                bounds.including(c.getPosition());
-            }
+        DataCenter dataCenter = DataCenter.getInstance();
+        LatLng userPosition = new LatLng(dataCenter.getUserLocation().getLatitude(), dataCenter.getUserLocation().getLongitude());
+        LatLngBounds.Builder builder = LatLngBounds.builder();
+        builder.include(userPosition);
+        addUserPositionMarker(userPosition);
+        for (Customer c: dataCenter.getCustomers()) {
+            builder.include(c.getPosition());
             addCustomerMarker(c);
         }
-        map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
+        final LatLngBounds bounds = builder.build();
+        map.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 30));
+            }
+        });
+    }
+
+    private void addUserPositionMarker(LatLng userPosition) {
+        MarkerOptions options = new MarkerOptions();
+        options.title("Your location");
+        options.position(userPosition);
+        options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+        map.addMarker(options);
     }
 
     private void addCustomerMarker(Customer customer){
@@ -51,6 +79,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         options.position(position);
         options.title("Name: " + customer.getName());
         options.snippet(createCustomerInfo(customer));
+        Customer.CustomerStatus statusEnum = Customer.CustomerStatus.findByStatus(customer.getStatus());
+        switch (statusEnum){
+            case Active:
+                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                break;
+            case InProgress:
+                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
+                break;
+            case Inactive:
+                options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                break;
+        }
         map.addMarker(options);
         map.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override

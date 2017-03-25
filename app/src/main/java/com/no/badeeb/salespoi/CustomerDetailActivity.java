@@ -62,7 +62,7 @@ public class CustomerDetailActivity extends AppCompatActivity {
         customerExtra3Textview = (TextView) findViewById(R.id.customer_extra3_text_view);
 
         Long customerId = getIntent().getLongExtra(ARG_ITEM_ID, -1);
-        customer = DataCenter.getById(customerId);
+        customer = DataCenter.getInstance().getCustomerById(customerId);
 
         CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
         if (appBarLayout != null) {
