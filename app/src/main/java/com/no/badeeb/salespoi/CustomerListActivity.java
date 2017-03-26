@@ -39,7 +39,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.no.badeeb.salespoi.models.Customer;
@@ -54,12 +53,11 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static android.media.CamcorderProfile.get;
-
 public class CustomerListActivity extends AppCompatActivity {
 
     private static final int LOCATION_PERM_RQST_CODE = 1;
-    private static final int GPS_SIGNAL_TIMEOUT = 1 * 1000; // 10 seconds
+    private static final int GPS_SIGNAL_TIMEOUT = 10 * 1000; // 10 seconds
+    private static final int GPS_SIGNAL_TIMEOUT_LOCATION_FOUND = 5 * 1000; // 10 seconds
 
 
     private RecyclerView recyclerView;
@@ -243,6 +241,11 @@ public class CustomerListActivity extends AppCompatActivity {
         try {
             showProgress(true);
             userLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            int timerTaskTimeout = GPS_SIGNAL_TIMEOUT;
+            // If there is an already found location, decrease time to search for GPS update
+            if(userLocation != null){
+                timerTaskTimeout = GPS_SIGNAL_TIMEOUT_LOCATION_FOUND;
+            }
             Timer t = new Timer();
             t.schedule(gpsTask = new TimerTask() {
                 @Override
@@ -254,7 +257,7 @@ public class CustomerListActivity extends AppCompatActivity {
                         }
                     });
                 }
-            }, GPS_SIGNAL_TIMEOUT);
+            }, timerTaskTimeout);
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, new LocationListener() {
                         @Override
                         public void onLocationChanged(Location location) {

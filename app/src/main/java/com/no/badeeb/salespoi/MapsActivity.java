@@ -29,21 +29,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
     }
 
-
-//    @Override
-//    public void onMapReady(GoogleMap googleMap) {
-//        map = googleMap;
-//        DataCenter dataCenter = DataCenter.getInstance();
-//        LatLng userPosition = new LatLng(dataCenter.getUserLocation().getLatitude(), dataCenter.getUserLocation().getLongitude());
-//        LatLngBounds bounds = new LatLngBounds(userPosition, userPosition);
-//        addUserPositionMarker(userPosition);
-//        for (Customer c: dataCenter.getCustomers()) {
-//            bounds.including(c.getPosition());
-//            addCustomerMarker(c);
-//        }
-//        map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 20));
-//    }
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
@@ -60,7 +45,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         map.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
-                map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 30));
+                map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 40));
             }
         });
     }
