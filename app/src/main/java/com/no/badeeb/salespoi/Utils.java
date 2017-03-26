@@ -3,6 +3,9 @@ package com.no.badeeb.salespoi;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.RetryPolicy;
+
 import static android.content.Context.MODE_PRIVATE;
 
 /**
@@ -33,6 +36,10 @@ public class Utils {
         SharedPreferences.Editor editor = getUserSharedFile(context).edit();
         editor.remove(AUTH_TOKEN_KEY);
         editor.commit();
+    }
+
+    public static RetryPolicy getRetryPolicy(){
+        return new DefaultRetryPolicy(3500, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
     }
 
     private static SharedPreferences getUserSharedFile(Context context){

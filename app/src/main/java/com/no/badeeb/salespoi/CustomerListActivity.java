@@ -155,6 +155,7 @@ public class CustomerListActivity extends AppCompatActivity {
                 return newHeaders;
             }
         };
+        jsonRequest.setRetryPolicy(Utils.getRetryPolicy());
         getRequestQueue().add(jsonRequest);
     }
 
@@ -201,7 +202,7 @@ public class CustomerListActivity extends AppCompatActivity {
                 return newHeaders;
             }
         };
-
+        request.setRetryPolicy(Utils.getRetryPolicy());
         getRequestQueue().add(request);
     }
 

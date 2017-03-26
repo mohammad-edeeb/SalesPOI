@@ -123,6 +123,7 @@ public class LoginActivity extends AppCompatActivity {
                 });
 
         showProgress(true);
+        jsonRequest.setRetryPolicy(Utils.getRetryPolicy());
         getRequestQueue().add(jsonRequest);
     }
 
