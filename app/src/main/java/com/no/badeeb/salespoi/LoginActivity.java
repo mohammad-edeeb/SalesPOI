@@ -13,7 +13,9 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -117,8 +119,14 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         showProgress(false);
-                        passwordEditText.setError(getString(R.string.error_incorrect_password));
-                        passwordEditText.requestFocus();
+                        NetworkResponse networkResponse = error.networkResponse;
+                        if(networkResponse != null && networkResponse.statusCode == 401){
+                            passwordEditText.setError(getString(R.string.error_incorrect_password));
+                            passwordEditText.requestFocus();
+                        }
+                        else{
+                            Toast.makeText(LoginActivity.this, "No network connection", Toast.LENGTH_LONG).show();
+                        }
                     }
                 });
 

@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -42,10 +43,10 @@ import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.no.badeeb.salespoi.models.Customer;
-import com.no.badeeb.salespoi.models.DataCenter;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -72,6 +73,7 @@ public class CustomerListActivity extends AppCompatActivity {
     private Gson gson;
     private TimerTask gpsTask;
     private Location userLocation;
+    private ArrayList<Customer> customers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +101,8 @@ public class CustomerListActivity extends AppCompatActivity {
         gson = gsonBuilder.create();
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        customers = new ArrayList<>();
     }
 
     private RequestQueue getRequestQueue() {
@@ -119,20 +123,19 @@ public class CustomerListActivity extends AppCompatActivity {
             Toast.makeText(this, "No GPS signal detected", Toast.LENGTH_LONG).show();
             return;
         }
-        DataCenter.getInstance().setUserLocation(userLocation);
         String url = Constants.HOST + "/api/sales_men/near_customers.json?";
         url += "lat=" + userLocation.getLatitude() + "&long=" + userLocation.getLongitude();
         StringRequest jsonRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        List<Customer> customers = Arrays.asList(gson.fromJson(response, Customer[].class));
-                        DataCenter.getInstance().clearCustomers();
-                        DataCenter.getInstance().add(customers);
+                        List<Customer> from = Arrays.asList(gson.fromJson(response, Customer[].class));
+                        customers.addAll(from);
                         showProgress(false);
                         if(customers == null || customers.isEmpty()){
                             Toast.makeText(CustomerListActivity.this, "No near customers found", Toast.LENGTH_LONG).show();
                         }
+                        recyclerViewAdapter.reloadCustomers(customers);
                         recyclerViewAdapter.notifyDataSetChanged();
                     }
                 },
@@ -140,8 +143,12 @@ public class CustomerListActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         showProgress(false);
-                        if(error.networkResponse.statusCode == 401){
+                        NetworkResponse networkResponse = error.networkResponse;
+                        if(networkResponse != null && networkResponse.statusCode == 401){
                             CustomerListActivity.this.switchToLogin();
+                        }
+                        else{
+                            Toast.makeText(CustomerListActivity.this, "No network connection", Toast.LENGTH_LONG).show();
                         }
                     }
                 }) {
@@ -187,8 +194,12 @@ public class CustomerListActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if(error.networkResponse.statusCode == 401){
+                        NetworkResponse networkResponse = error.networkResponse;
+                        if(networkResponse != null && networkResponse.statusCode == 401){
                             CustomerListActivity.this.switchToLogin();
+                        }
+                        else{
+                            Toast.makeText(CustomerListActivity.this, "No network connection", Toast.LENGTH_LONG).show();
                         }
                     }
                 }) {
@@ -308,11 +319,13 @@ public class CustomerListActivity extends AppCompatActivity {
     }
 
     public void openMap(View view) {
-        if(!DataCenter.getInstance().hasCustomers()){
+        if(customers.isEmpty()){
             Toast.makeText(this, "No customers to show, please refresh", Toast.LENGTH_SHORT).show();
             return;
         }
-        Intent intent = new Intent(this, MapsActivity.class);
+        Intent intent = new Intent(this, MapActivity.class);
+        intent.putParcelableArrayListExtra(Constants.EXTRA_CUSTOMERS, customers);
+        intent.putExtra(Constants.EXTRA_USER_LOCATION, userLocation);
         startActivity(intent);
     }
 
@@ -326,10 +339,15 @@ public class CustomerListActivity extends AppCompatActivity {
     public class CustomersRecyclerViewAdapter
             extends RecyclerView.Adapter<CustomersRecyclerViewAdapter.ViewHolder> {
 
-        private List<Customer> mCustomers;
+        private List<Customer> customers;
 
         public CustomersRecyclerViewAdapter() {
-            mCustomers = DataCenter.getInstance().getCustomers();
+            customers = new ArrayList<>();
+        }
+
+        public void reloadCustomers(List<Customer> customers){
+            this.customers.clear();
+            this.customers.addAll(customers);
         }
 
         @Override
@@ -341,8 +359,8 @@ public class CustomerListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            Customer c = mCustomers.get(position);
-            holder.mCustomer = c;
+            Customer c = customers.get(position);
+            holder.customer = c;
             holder.mIdView.setText(c.getCustomerId());
             holder.mContentView.setText(c.getName());
 
@@ -364,7 +382,8 @@ public class CustomerListActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     Context context = v.getContext();
                     Intent intent = new Intent(context, CustomerDetailActivity.class);
-                    intent.putExtra(CustomerDetailActivity.ARG_ITEM_ID, holder.mCustomer.getId());
+                    intent.putExtra(Constants.EXTRA_CUSTOMER, holder.customer);
+                    intent.putParcelableArrayListExtra(Constants.EXTRA_CUSTOMERS, CustomerListActivity.this.customers);
                     context.startActivity(intent);
                 }
             });
@@ -372,14 +391,14 @@ public class CustomerListActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            return mCustomers.size();
+            return customers.size();
         }
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             public final View mView;
             public final TextView mIdView;
             public final TextView mContentView;
-            public Customer mCustomer;
+            public Customer customer;
 
             public ViewHolder(View view) {
                 super(view);

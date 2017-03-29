@@ -1,5 +1,7 @@
 package com.no.badeeb.salespoi;
 
+import android.location.Location;
+import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -15,16 +17,22 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.no.badeeb.salespoi.models.Customer;
-import com.no.badeeb.salespoi.models.DataCenter;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+import java.util.ArrayList;
+import java.util.List;
+
+public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap map;
+    private List<Customer> customers = new ArrayList<>();
+    private Location userLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        customers = getIntent().getParcelableArrayListExtra(Constants.EXTRA_CUSTOMERS);
+        userLocation = getIntent().getParcelableExtra(Constants.EXTRA_USER_LOCATION);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
@@ -32,12 +40,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        DataCenter dataCenter = DataCenter.getInstance();
-        LatLng userPosition = new LatLng(dataCenter.getUserLocation().getLatitude(), dataCenter.getUserLocation().getLongitude());
+        LatLng userPosition = new LatLng(userLocation.getLatitude(), userLocation.getLongitude());
         LatLngBounds.Builder builder = LatLngBounds.builder();
         builder.include(userPosition);
         addUserPositionMarker(userPosition);
-        for (Customer c: dataCenter.getCustomers()) {
+        for (Customer c: customers) {
             builder.include(c.getPosition());
             addCustomerMarker(c);
         }
@@ -85,7 +92,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public View getInfoContents(Marker marker) {
-                View layout = MapsActivity.this.getLayoutInflater().inflate(R.layout.map_info_window, null);
+                View layout = MapActivity.this.getLayoutInflater().inflate(R.layout.map_info_window, null);
                 ((TextView)layout.findViewById(R.id.window_title_text_view)).setText(marker.getTitle());
                 ((TextView)layout.findViewById(R.id.window_snippet_text_view)).setText(marker.getSnippet());
                 return layout;

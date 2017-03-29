@@ -1,5 +1,7 @@
 package com.no.badeeb.salespoi.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.TextUtils;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -20,7 +22,7 @@ import static android.R.attr.key;
  * Created by meldeeb on 3/18/17.
  */
 
-public class Customer {
+public class Customer implements Parcelable {
 
 
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
@@ -209,4 +211,60 @@ public class Customer {
         this.extra3 = extra3;
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.id);
+        dest.writeString(this.customerId);
+        dest.writeString(this.name);
+        dest.writeValue(this.longitude);
+        dest.writeValue(this.latitude);
+        dest.writeString(this.zoneName);
+        dest.writeString(this.salesManName);
+        dest.writeInt(this.status);
+        dest.writeLong(this.lastVisitedAt != null ? this.lastVisitedAt.getTime() : -1);
+        dest.writeLong(this.lastInvoiceAt != null ? this.lastInvoiceAt.getTime() : -1);
+        dest.writeValue(this.lastTrxAmount);
+        dest.writeString(this.extra1);
+        dest.writeString(this.extra2);
+        dest.writeString(this.extra3);
+    }
+
+    public Customer() {
+    }
+
+    protected Customer(Parcel in) {
+        this.id = (Long) in.readValue(Long.class.getClassLoader());
+        this.customerId = in.readString();
+        this.name = in.readString();
+        this.longitude = (Double) in.readValue(Double.class.getClassLoader());
+        this.latitude = (Double) in.readValue(Double.class.getClassLoader());
+        this.zoneName = in.readString();
+        this.salesManName = in.readString();
+        this.status = in.readInt();
+        long tmpLastVisitedAt = in.readLong();
+        this.lastVisitedAt = tmpLastVisitedAt == -1 ? null : new Date(tmpLastVisitedAt);
+        long tmpLastInvoiceAt = in.readLong();
+        this.lastInvoiceAt = tmpLastInvoiceAt == -1 ? null : new Date(tmpLastInvoiceAt);
+        this.lastTrxAmount = (Double) in.readValue(Double.class.getClassLoader());
+        this.extra1 = in.readString();
+        this.extra2 = in.readString();
+        this.extra3 = in.readString();
+    }
+
+    public static final Parcelable.Creator<Customer> CREATOR = new Parcelable.Creator<Customer>() {
+        @Override
+        public Customer createFromParcel(Parcel source) {
+            return new Customer(source);
+        }
+
+        @Override
+        public Customer[] newArray(int size) {
+            return new Customer[size];
+        }
+    };
 }
