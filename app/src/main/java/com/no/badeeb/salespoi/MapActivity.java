@@ -61,7 +61,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         MarkerOptions options = new MarkerOptions();
         options.title("Your location");
         options.position(userPosition);
-        options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+        options.icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_my_location));
         map.addMarker(options);
     }
 

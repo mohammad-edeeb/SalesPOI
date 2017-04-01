@@ -19,15 +19,12 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -84,6 +81,8 @@ public class CustomerListActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
+        customers = new ArrayList<>();
+
         fab = (FloatingActionButton) findViewById(R.id.fab);
         progressBar = (ProgressBar) findViewById(R.id.gps_progress);
         frameLayout = (FrameLayout) findViewById(R.id.frameLayout);
@@ -93,7 +92,7 @@ public class CustomerListActivity extends AppCompatActivity {
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
                 DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(dividerItemDecoration);
-        recyclerViewAdapter = new CustomersRecyclerViewAdapter();
+        recyclerViewAdapter = new CustomersRecyclerViewAdapter(this);
         recyclerView.setAdapter(recyclerViewAdapter);
 
         GsonBuilder gsonBuilder = new GsonBuilder();
@@ -102,7 +101,6 @@ public class CustomerListActivity extends AppCompatActivity {
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        customers = new ArrayList<>();
     }
 
     private RequestQueue getRequestQueue() {
@@ -117,7 +115,11 @@ public class CustomerListActivity extends AppCompatActivity {
         }
     }
 
-    private void getCustomers() {
+    public ArrayList<Customer> getCustomers(){
+        return customers;
+    }
+
+    private void fetchCustomers() {
         if (userLocation == null) {
             showProgress(false);
             Toast.makeText(this, "No GPS signal detected", Toast.LENGTH_LONG).show();
@@ -130,12 +132,12 @@ public class CustomerListActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String response) {
                         List<Customer> from = Arrays.asList(gson.fromJson(response, Customer[].class));
+                        customers.clear();
                         customers.addAll(from);
                         showProgress(false);
                         if(customers == null || customers.isEmpty()){
                             Toast.makeText(CustomerListActivity.this, "No near customers found", Toast.LENGTH_LONG).show();
                         }
-                        recyclerViewAdapter.reloadCustomers(customers);
                         recyclerViewAdapter.notifyDataSetChanged();
                     }
                 },
@@ -264,7 +266,7 @@ public class CustomerListActivity extends AppCompatActivity {
                     CustomerListActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            getCustomers();
+                            fetchCustomers();
                         }
                     });
                 }
@@ -281,7 +283,7 @@ public class CustomerListActivity extends AppCompatActivity {
                             if (location != null) {
                                 CustomerListActivity.this.userLocation = location;
                             }
-                            getCustomers();
+                            fetchCustomers();
                         }
 
                         @Override
@@ -336,81 +338,4 @@ public class CustomerListActivity extends AppCompatActivity {
         return true;
     }
 
-    public class CustomersRecyclerViewAdapter
-            extends RecyclerView.Adapter<CustomersRecyclerViewAdapter.ViewHolder> {
-
-        private List<Customer> customers;
-
-        public CustomersRecyclerViewAdapter() {
-            customers = new ArrayList<>();
-        }
-
-        public void reloadCustomers(List<Customer> customers){
-            this.customers.clear();
-            this.customers.addAll(customers);
-        }
-
-        @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.customer_list_content, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(final ViewHolder holder, int position) {
-            Customer c = customers.get(position);
-            holder.customer = c;
-            holder.mIdView.setText(c.getCustomerId());
-            holder.mContentView.setText(c.getName());
-
-            Customer.CustomerStatus statusEnum = Customer.CustomerStatus.findByStatus(c.getStatus());
-            holder.mView.setAlpha(0.7f);
-            switch (statusEnum){
-                case Active:
-                    holder.mView.setBackgroundColor(CustomerListActivity.this.getResources().getColor(R.color.activeCustomer));
-                    break;
-                case InProgress:
-                    holder.mView.setBackgroundColor(CustomerListActivity.this.getResources().getColor(R.color.inprogressCustomer));
-                    break;
-                case Inactive:
-                    holder.mView.setBackgroundColor(CustomerListActivity.this.getResources().getColor(R.color.inactiveCustomer));
-                    break;
-            }
-            holder.mView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Context context = v.getContext();
-                    Intent intent = new Intent(context, CustomerDetailActivity.class);
-                    intent.putExtra(Constants.EXTRA_CUSTOMER, holder.customer);
-                    intent.putParcelableArrayListExtra(Constants.EXTRA_CUSTOMERS, CustomerListActivity.this.customers);
-                    context.startActivity(intent);
-                }
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return customers.size();
-        }
-
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public final View mView;
-            public final TextView mIdView;
-            public final TextView mContentView;
-            public Customer customer;
-
-            public ViewHolder(View view) {
-                super(view);
-                mView = view;
-                mIdView = (TextView) view.findViewById(R.id.id);
-                mContentView = (TextView) view.findViewById(R.id.content);
-            }
-
-            @Override
-            public String toString() {
-                return super.toString() + " '" + mContentView.getText() + "'";
-            }
-        }
-    }
 }
