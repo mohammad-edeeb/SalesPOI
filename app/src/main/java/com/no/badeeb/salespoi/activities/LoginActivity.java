@@ -1,4 +1,4 @@
-package com.no.badeeb.salespoi;
+package com.no.badeeb.salespoi.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -22,11 +22,12 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.no.badeeb.salespoi.Constants;
+import com.no.badeeb.salespoi.R;
+import com.no.badeeb.salespoi.Utils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.prefs.Preferences;
 
 public class LoginActivity extends AppCompatActivity {
 

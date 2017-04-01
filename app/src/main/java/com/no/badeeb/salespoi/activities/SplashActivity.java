@@ -1,4 +1,4 @@
-package com.no.badeeb.salespoi;
+package com.no.badeeb.salespoi.activities;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;

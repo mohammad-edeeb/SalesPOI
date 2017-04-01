@@ -1,8 +1,7 @@
-package com.no.badeeb.salespoi;
+package com.no.badeeb.salespoi.activities;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -39,6 +38,10 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.no.badeeb.salespoi.Constants;
+import com.no.badeeb.salespoi.CustomersRecyclerViewAdapter;
+import com.no.badeeb.salespoi.R;
+import com.no.badeeb.salespoi.Utils;
 import com.no.badeeb.salespoi.models.Customer;
 
 import org.json.JSONObject;
@@ -101,6 +104,13 @@ public class CustomerListActivity extends AppCompatActivity {
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putParcelableArrayList(Constants.EXTRA_CUSTOMERS, customers);
+        savedInstanceState.putParcelable(Constants.EXTRA_USER_LOCATION, userLocation);
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     private RequestQueue getRequestQueue() {

@@ -1,7 +1,6 @@
-package com.no.badeeb.salespoi;
+package com.no.badeeb.salespoi.activities;
 
 import android.location.Location;
-import android.os.Parcelable;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -16,6 +15,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.no.badeeb.salespoi.Constants;
+import com.no.badeeb.salespoi.R;
 import com.no.badeeb.salespoi.models.Customer;
 
 import java.util.ArrayList;

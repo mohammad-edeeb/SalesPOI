@@ -1,4 +1,4 @@
-package com.no.badeeb.salespoi;
+package com.no.badeeb.salespoi.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,6 +10,8 @@ import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.no.badeeb.salespoi.Constants;
+import com.no.badeeb.salespoi.R;
 import com.no.badeeb.salespoi.models.Customer;
 
 /**

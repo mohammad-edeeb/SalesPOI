@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.no.badeeb.salespoi.activities.CustomerDetailActivity;
+import com.no.badeeb.salespoi.activities.CustomerListActivity;
 import com.no.badeeb.salespoi.models.Customer;
 
 /**

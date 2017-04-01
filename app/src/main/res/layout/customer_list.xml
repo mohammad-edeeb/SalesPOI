@@ -7,5 +7,5 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layoutManager="LinearLayoutManager"
-    tools:context="com.no.badeeb.salespoi.CustomerListActivity"
+    tools:context="com.no.badeeb.salespoi.activities.CustomerListActivity"
     tools:listitem="@layout/customer_list_content" />
